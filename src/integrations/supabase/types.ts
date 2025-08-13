@@ -14,7 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      media: {
+        Row: {
+          bucket: string
+          category_id: string | null
+          created_at: string
+          downloadable: boolean
+          id: string
+          mime_type: string | null
+          note: string | null
+          path: string
+          size: number | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bucket?: string
+          category_id?: string | null
+          created_at?: string
+          downloadable?: boolean
+          id?: string
+          mime_type?: string | null
+          note?: string | null
+          path: string
+          size?: number | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bucket?: string
+          category_id?: string | null
+          created_at?: string
+          downloadable?: boolean
+          id?: string
+          mime_type?: string | null
+          note?: string | null
+          path?: string
+          size?: number | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      share_access: {
+        Row: {
+          created_at: string
+          id: string
+          mode: Database["public"]["Enums"]["share_access_mode"]
+          share_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mode: Database["public"]["Enums"]["share_access_mode"]
+          share_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mode?: Database["public"]["Enums"]["share_access_mode"]
+          share_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_access_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shares: {
+        Row: {
+          allow_download: boolean
+          created_at: string
+          expire_at: string | null
+          id: string
+          media_id: string
+          password_hash: string | null
+          require_auth: boolean
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_download?: boolean
+          created_at?: string
+          expire_at?: string | null
+          id?: string
+          media_id: string
+          password_hash?: string | null
+          require_auth?: boolean
+          token?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_download?: boolean
+          created_at?: string
+          expire_at?: string | null
+          id?: string
+          media_id?: string
+          password_hash?: string | null
+          require_auth?: boolean
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shares_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +178,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      share_access_mode: "whitelist" | "blacklist"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +305,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      share_access_mode: ["whitelist", "blacklist"],
+    },
   },
 } as const
