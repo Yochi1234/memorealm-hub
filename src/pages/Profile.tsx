@@ -87,19 +87,23 @@ const Profile = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
+      // Direct database query with type assertion
+      const result = await supabase
+        .from('profiles' as any)
         .select('*')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .maybeSingle();
+      
+      if (result.error && result.error.code !== 'PGRST116') {
+        console.error('Profile fetch error:', result.error);
+        return;
+      }
 
-      if (error && error.code !== 'PGRST116') throw error;
-
-      if (data) {
+      if (result.data) {
         setProfile({
-          display_name: data.display_name || "",
-          bio: data.bio || "",
-          avatar_url: data.avatar_url || ""
+          display_name: (result.data as any).display_name || "",
+          bio: (result.data as any).bio || "",
+          avatar_url: (result.data as any).avatar_url || ""
         });
       }
     } catch (error) {
@@ -113,9 +117,9 @@ const Profile = () => {
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles' as any)
         .upsert({
-          user_id: user.id,
+          id: user.id,
           display_name: profile.display_name,
           bio: profile.bio,
           avatar_url: profile.avatar_url

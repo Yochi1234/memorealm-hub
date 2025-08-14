@@ -1,6 +1,9 @@
 import { Link, NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { User, Settings, LogOut } from "lucide-react";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -26,14 +29,34 @@ const SiteHeader = () => {
               <NavLink to="/upload" className={navLinkClass}>
                 อัปโหลด
               </NavLink>
-              <Button variant="outline" onClick={signOut}>
-                ออกจากระบบ
-              </Button>
+              <ThemeToggle />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      โปรไฟล์
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    ออกจากระบบ
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
-            <Button asChild variant="outline">
-              <Link to="/auth">เข้าสู่ระบบ</Link>
-            </Button>
+            <>
+              <ThemeToggle />
+              <Button asChild variant="outline">
+                <Link to="/auth">เข้าสู่ระบบ</Link>
+              </Button>
+            </>
           )}
         </nav>
       </div>
