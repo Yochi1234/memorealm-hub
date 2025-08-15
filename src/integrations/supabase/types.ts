@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_control: {
+        Row: {
+          controlled_by: string | null
+          created_at: string
+          id: string
+          reason: string | null
+          status: Database["public"]["Enums"]["access_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          controlled_by?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["access_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          controlled_by?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["access_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      access_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          resource: string | null
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          resource?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          resource?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -197,14 +260,54 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_user_access: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["access_status"]
+      }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      access_status: "allowed" | "blocked" | "pending"
+      app_role: "admin" | "moderator" | "user"
       share_access_mode: "whitelist" | "blacklist"
     }
     CompositeTypes: {
@@ -333,6 +436,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      access_status: ["allowed", "blocked", "pending"],
+      app_role: ["admin", "moderator", "user"],
       share_access_mode: ["whitelist", "blacklist"],
     },
   },
