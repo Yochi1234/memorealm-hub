@@ -29,6 +29,9 @@ const SiteHeader = () => {
               <NavLink to="/upload" className={navLinkClass}>
                 อัปโหลด
               </NavLink>
+              <NavLink to="/dashboard" className={navLinkClass}>
+                แดชบอร์ด
+              </NavLink>
               <ThemeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
