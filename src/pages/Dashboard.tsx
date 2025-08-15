@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useRealtimeData } from "@/hooks/useRealtimeData";
+import { UserManagementPanel } from "@/components/UserManagementPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +24,10 @@ import {
   HardDrive,
   Activity,
   BarChart3,
-  Clock
+  Clock,
+  Shield,
+  AlertTriangle,
+  CheckCircle
 } from "lucide-react";
 
 interface DashboardStats {
@@ -31,6 +37,7 @@ interface DashboardStats {
   storageUsed: number;
   recentUploads: number;
   activeShares: number;
+  securityAlerts: number;
 }
 
 interface MediaItem {
@@ -54,6 +61,14 @@ interface ShareItem {
   };
 }
 
+interface SecurityAlert {
+  id: string;
+  type: "login_attempt" | "access_denied" | "suspicious_activity";
+  message: string;
+  created_at: string;
+  severity: "low" | "medium" | "high";
+}
+
 const chartConfig = {
   uploads: {
     label: "Uploads",
@@ -71,6 +86,8 @@ const chartConfig = {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { role, hasRole } = useUserRole();
+  const { stats: realtimeStats, loading: realtimeLoading } = useRealtimeData();
   const [stats, setStats] = useState<DashboardStats>({
     totalMedia: 0,
     totalShares: 0,
@@ -78,17 +95,35 @@ export default function Dashboard() {
     storageUsed: 0,
     recentUploads: 0,
     activeShares: 0,
+    securityAlerts: 0,
   });
   const [recentMedia, setRecentMedia] = useState<MediaItem[]>([]);
   const [recentShares, setRecentShares] = useState<ShareItem[]>([]);
+  const [securityAlerts, setSecurityAlerts] = useState<SecurityAlert[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
+      logUserActivity("dashboard_view", "dashboard");
     }
   }, [user]);
+
+  const logUserActivity = async (action: string, resource: string) => {
+    try {
+      await supabase.from("access_logs").insert({
+        user_id: user?.id,
+        action,
+        resource,
+        ip_address: "127.0.0.1", // In production, get real IP
+        user_agent: navigator.userAgent,
+        success: true,
+      });
+    } catch (error) {
+      console.error("Error logging activity:", error);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -124,6 +159,24 @@ export default function Dashboard() {
         return new Date(share.expire_at) > new Date();
       }).length || 0;
 
+      // Mock security alerts
+      const mockAlerts: SecurityAlert[] = [
+        {
+          id: "1",
+          type: "login_attempt",
+          message: "Multiple failed login attempts detected",
+          created_at: new Date().toISOString(),
+          severity: "medium",
+        },
+        {
+          id: "2", 
+          type: "suspicious_activity",
+          message: "Unusual file access pattern",
+          created_at: new Date().toISOString(),
+          severity: "low",
+        },
+      ];
+
       setStats({
         totalMedia: media?.length || 0,
         totalShares: shares?.length || 0,
@@ -131,10 +184,12 @@ export default function Dashboard() {
         storageUsed: totalSize,
         recentUploads,
         activeShares,
+        securityAlerts: mockAlerts.length,
       });
 
       setRecentMedia(media?.slice(0, 5) || []);
       setRecentShares(shares?.slice(0, 5) || []);
+      setSecurityAlerts(mockAlerts);
 
       // Generate chart data (mock data for demonstration)
       const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -195,12 +250,22 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">ภาพรวมและการจัดการระบบของคุณ</p>
+          <p className="text-muted-foreground">
+            ภาพรวมและการจัดการระบบของคุณ • บทบาท: {role === "admin" ? "ผู้ดูแลระบบ" : role === "moderator" ? "ผู้ดูแล" : "ผู้ใช้"}
+          </p>
         </div>
-        <Button onClick={fetchDashboardData} variant="outline" size="sm">
-          <Activity className="w-4 h-4 mr-2" />
-          รีเฟรช
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={fetchDashboardData} variant="outline" size="sm">
+            <Activity className="w-4 h-4 mr-2" />
+            รีเฟรช
+          </Button>
+          {hasRole("admin") && (
+            <Badge variant="destructive" className="px-3 py-1">
+              <Shield className="w-4 h-4 mr-1" />
+              ADMIN
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -211,7 +276,7 @@ export default function Dashboard() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalMedia}</div>
+            <div className="text-2xl font-bold">{realtimeStats.totalMedia}</div>
             <p className="text-xs text-muted-foreground">
               +{stats.recentUploads} ในสัปดาห์นี้
             </p>
@@ -224,7 +289,7 @@ export default function Dashboard() {
             <Share2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalShares}</div>
+            <div className="text-2xl font-bold">{realtimeStats.totalShares}</div>
             <p className="text-xs text-muted-foreground">
               {stats.activeShares} ลิงก์ที่ใช้งานได้
             </p>
@@ -233,27 +298,26 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">การเข้าชม</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">ผู้ใช้ทั้งหมด</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalViews}</div>
+            <div className="text-2xl font-bold">{realtimeStats.totalUsers}</div>
             <p className="text-xs text-muted-foreground">
-              รวมการเข้าชมทั้งหมด
+              {realtimeStats.activeUsers} คนออนไลน์
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">พื้นที่ใช้งาน</CardTitle>
-            <HardDrive className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">แจ้งเตือนความปลอดภัย</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatFileSize(stats.storageUsed)}</div>
-            <Progress value={25} className="mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">
-              25% ของพื้นที่ทั้งหมด
+            <div className="text-2xl font-bold text-destructive">{stats.securityAlerts}</div>
+            <p className="text-xs text-muted-foreground">
+              ต้องตรวจสอบ
             </p>
           </CardContent>
         </Card>
@@ -322,11 +386,55 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Activity Tables */}
-      <Tabs defaultValue="shares" className="space-y-4">
+      <Tabs defaultValue="activity" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="activity">กิจกรรมล่าสุด</TabsTrigger>
           <TabsTrigger value="shares">การแชร์ล่าสุด</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="security">ความปลอดภัย</TabsTrigger>
+          {hasRole("admin") && <TabsTrigger value="users">จัดการผู้ใช้</TabsTrigger>}
         </TabsList>
+
+        <TabsContent value="activity">
+          <Card>
+            <CardHeader>
+              <CardTitle>กิจกรรมล่าสุด</CardTitle>
+              <CardDescription>
+                การดำเนินการล่าสุดในระบบ
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ผู้ใช้</TableHead>
+                    <TableHead>การดำเนินการ</TableHead>
+                    <TableHead>ทรัพยากร</TableHead>
+                    <TableHead>เวลา</TableHead>
+                    <TableHead>สถานะ</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {realtimeStats.recentActivity.map((activity) => (
+                    <TableRow key={activity.id}>
+                      <TableCell>
+                        {activity.profiles?.display_name || "Unknown User"}
+                      </TableCell>
+                      <TableCell>{activity.action}</TableCell>
+                      <TableCell>{activity.resource}</TableCell>
+                      <TableCell>{formatDate(activity.created_at)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          สำเร็จ
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="shares">
           <Card>
@@ -382,6 +490,50 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="security">
+          <Card>
+            <CardHeader>
+              <CardTitle>แจ้งเตือนความปลอดภัย</CardTitle>
+              <CardDescription>
+                เหตุการณ์ที่ต้องตรวจสอบ
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {securityAlerts.map((alert) => (
+                  <div key={alert.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className={`w-5 h-5 ${
+                        alert.severity === "high" ? "text-destructive" :
+                        alert.severity === "medium" ? "text-warning" : "text-muted-foreground"
+                      }`} />
+                      <div>
+                        <p className="font-medium">{alert.message}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(alert.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant={
+                      alert.severity === "high" ? "destructive" :
+                      alert.severity === "medium" ? "default" : "secondary"
+                    }>
+                      {alert.severity === "high" ? "สูง" :
+                       alert.severity === "medium" ? "กลาง" : "ต่ำ"}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {hasRole("admin") && (
+          <TabsContent value="users">
+            <UserManagementPanel />
+          </TabsContent>
+        )}
 
         <TabsContent value="analytics">
           <Card>
