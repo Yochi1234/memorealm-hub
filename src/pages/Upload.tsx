@@ -130,7 +130,7 @@ const Upload = () => {
               <p className="text-xs text-muted-foreground">ลากไฟล์มาวางได้ รองรับภาพและวิดีโอ</p>
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-4">
               <div className="flex items-center justify-between">
                 <Label>หมวดหมู่</Label>
                 <Dialog open={showNewCategoryDialog} onOpenChange={setShowNewCategoryDialog}>
@@ -165,46 +165,56 @@ const Upload = () => {
                   </DialogContent>
                 </Dialog>
               </div>
-              <div className="flex gap-2">
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="เลือกหมวดหมู่" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
+
+              {/* Category List with Delete Buttons */}
+              {categories.length > 0 && (
+                <div className="border rounded-lg p-3 space-y-2">
+                  <div className="text-sm text-muted-foreground">หมวดหมู่ที่มี:</div>
+                  {categories.map((category) => (
+                    <div key={category.id} className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-md">
+                      <div 
+                        className={`cursor-pointer flex-1 ${selectedCategory === category.id ? 'font-medium text-primary' : ''}`}
+                        onClick={() => setSelectedCategory(category.id)}
+                      >
                         {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedCategory && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="icon" className="h-10">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>ลบหมวดหมู่</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          คุณแน่ใจหรือไม่ที่จะลบหมวดหมู่นี้? การกระทำนี้ไม่สามารถยกเลิกได้
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteCategory(selectedCategory)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          ลบ
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-              </div>
+                      </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive">
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>ลบหมวดหมู่</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              คุณแน่ใจหรือไม่ที่จะลบหมวดหมู่ "{category.name}"? การกระทำนี้ไม่สามารถยกเลิกได้
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteCategory(category.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              ลบ
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Selected Category Display */}
+              {selectedCategory && (
+                <div className="text-sm text-muted-foreground">
+                  หมวดหมู่ที่เลือก: <span className="font-medium text-foreground">
+                    {categories.find(cat => cat.id === selectedCategory)?.name}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between">
