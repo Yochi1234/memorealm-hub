@@ -22,7 +22,7 @@ const Index = () => {
                 เก็บ จัดหมวด แชร์ ความทรงจำของคุณ
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                MemoRealm จัดการรูปภาพและวิดีโอได้ง่าย ๆ พร้อมโน้ต วันเวลา ลิงก์แชร์ และสิทธิ์ดาวน์โหลดต่อไฟล์
+                remembranceGraX จัดการรูปภาพและวิดีโอได้ง่าย ๆ พร้อมโน้ต วันเวลา ลิงก์แชร์ และสิทธิ์ดาวน์โหลดต่อไฟล์
               </p>
               <div className="mt-8 flex items-center justify-center gap-3">
                 <Button asChild variant="hero" size="lg">

@@ -16,9 +16,9 @@ const SiteHeader = () => {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-14 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2" aria-label="MemoRealm Home">
+        <Link to="/" className="flex items-center gap-2" aria-label="remembranceGraX Home">
           <div className="h-6 w-6 rounded-md" style={{ backgroundImage: "var(--gradient-primary)" }} />
-          <span className="text-base font-semibold">MemoRealm</span>
+          <span className="text-base font-semibold">remembranceGraX</span>
         </Link>
         <nav className="flex items-center gap-2">
           {user ? (

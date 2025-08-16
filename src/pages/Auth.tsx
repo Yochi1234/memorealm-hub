@@ -91,7 +91,7 @@ const Auth = () => {
 
   return (
     <main className="container mx-auto max-w-3xl py-10">
-      <h1 className="sr-only">เข้าสู่ระบบ MemoRealm</h1>
+      <h1 className="sr-only">เข้าสู่ระบบ remembranceGraX</h1>
       <Card>
         <CardHeader>
           <CardTitle>ยินดีต้อนรับกลับ</CardTitle>
