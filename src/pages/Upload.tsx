@@ -22,6 +22,9 @@ const Upload = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [showNewCategoryDialog, setShowNewCategoryDialog] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [files, setFiles] = useState<FileList | null>(null);
+  const [note, setNote] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -107,12 +110,88 @@ const Upload = () => {
     });
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "ต้องเชื่อมต่อ Supabase ก่อน",
-      description: "เชื่อม Supabase เพื่ออัปโหลดไฟล์จริงและบันทึกเมตาดาตา",
-    });
+    
+    if (!user) {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: "กรุณาเข้าสู่ระบบก่อน",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!files || files.length === 0) {
+      toast({
+        title: "เกิดข้อผิดพลาด", 
+        description: "กรุณาเลือกไฟล์ที่ต้องการอัปโหลด",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        // Generate unique filename
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        // Save metadata to database
+        const { error: dbError } = await supabase
+          .from('media')
+          .insert({
+            user_id: user.id,
+            path: uploadData.path,
+            title: file.name.split('.')[0], // filename without extension
+            note: note.trim() || null,
+            category_id: selectedCategory || null,
+            downloadable: down,
+            size: file.size,
+            mime_type: file.type,
+            bucket: 'media'
+          });
+
+        if (dbError) throw dbError;
+
+        return uploadData.path;
+      });
+
+      await Promise.all(uploadPromises);
+
+      toast({
+        title: "อัปโหลดสำเร็จ",
+        description: `อัปโหลดไฟล์ ${files.length} ไฟล์เรียบร้อยแล้ว`
+      });
+
+      // Reset form
+      setFiles(null);
+      setNote("");
+      setSelectedCategory("");
+      
+      // Reset file input
+      const fileInput = document.getElementById('file') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: "ไม่สามารถอัปโหลดไฟล์ได้",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -126,7 +205,13 @@ const Upload = () => {
           <form className="grid gap-6" onSubmit={onSubmit}>
             <div className="grid gap-2">
               <Label htmlFor="file">ไฟล์สื่อ</Label>
-              <Input id="file" type="file" accept="image/*,video/*" multiple />
+              <Input 
+                id="file" 
+                type="file" 
+                accept="image/*,video/*" 
+                multiple 
+                onChange={(e) => setFiles(e.target.files)}
+              />
               <p className="text-xs text-muted-foreground">ลากไฟล์มาวางได้ รองรับภาพและวิดีโอ</p>
             </div>
 
@@ -227,10 +312,17 @@ const Upload = () => {
 
             <div className="grid gap-2">
               <Label htmlFor="note">โน้ต</Label>
-              <Textarea id="note" placeholder="เขียนรายละเอียดเพิ่มเติม…" />
+              <Textarea 
+                id="note" 
+                placeholder="เขียนรายละเอียดเพิ่มเติม…" 
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
             </div>
 
-            <Button variant="hero" type="submit">อัปโหลด</Button>
+            <Button variant="hero" type="submit" disabled={uploading}>
+              {uploading ? "กำลังอัปโหลด..." : "อัปโหลด"}
+            </Button>
           </form>
         </CardContent>
       </Card>
