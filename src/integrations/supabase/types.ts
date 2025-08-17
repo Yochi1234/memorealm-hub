@@ -154,6 +154,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          message: string | null
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message?: string | null
+          read?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message?: string | null
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -213,8 +246,56 @@ export type Database = {
           },
         ]
       }
+      share_access_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string | null
+          requester_email: string | null
+          requester_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          share_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          requester_email?: string | null
+          requester_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          share_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          requester_email?: string | null
+          requester_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          share_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_access_requests_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shares: {
         Row: {
+          access_mode: string | null
           allow_download: boolean
           created_at: string
           expire_at: string | null
@@ -227,6 +308,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          access_mode?: string | null
           allow_download?: boolean
           created_at?: string
           expire_at?: string | null
@@ -239,6 +321,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          access_mode?: string | null
           allow_download?: boolean
           created_at?: string
           expire_at?: string | null
@@ -308,7 +391,7 @@ export type Database = {
     Enums: {
       access_status: "allowed" | "blocked" | "pending"
       app_role: "admin" | "moderator" | "user"
-      share_access_mode: "whitelist" | "blacklist"
+      share_access_mode: "whitelist" | "blacklist" | "pending" | "requested"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -438,7 +521,7 @@ export const Constants = {
     Enums: {
       access_status: ["allowed", "blocked", "pending"],
       app_role: ["admin", "moderator", "user"],
-      share_access_mode: ["whitelist", "blacklist"],
+      share_access_mode: ["whitelist", "blacklist", "pending", "requested"],
     },
   },
 } as const

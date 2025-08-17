@@ -10,7 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MoreHorizontal, Edit, Trash2, Share, Download, Eye, Calendar, FolderOpen } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, Share, Download, Eye, Calendar, FolderOpen, Users } from "lucide-react";
+import { ShareAccessManager } from "@/components/ShareAccessManager";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface MediaItem {
@@ -311,6 +312,12 @@ const Gallery = () => {
                           ดาวน์โหลด
                         </DropdownMenuItem>
                       )}
+                      <div className="px-2 py-1">
+                        <ShareAccessManager 
+                          shareId={item.id} 
+                          mediaTitle={item.title || `รูปภาพ ${item.id.slice(0, 8)}`}
+                        />
+                      </div>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
